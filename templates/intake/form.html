@@ -1,80 +1,192 @@
-{% extends "intake/base_intake.html" %}
-{% block title %}Sign in — {{ event.name }}{% endblock %}
+{% extends 'intake/base_intake.html' %}
+{% block banner %}
+<div class="btw-banner">
+  <p class="small">Please Complete The Form And We Will Be In Touch.</p>
+  <p class="big">BETTER OPPORTUNITY AWAITS!</p>
+</div>
+{% endblock %}
 {% block content %}
-<div class="card">
-  <h2>{{ event.name }}</h2>
-  <p class="muted">Fill this out to sign in — takes about a minute.</p>
-
+<main>
   {% if error %}<div class="error-box">{{ error }}</div>{% endif %}
-
   <form method="post">
     {% csrf_token %}
 
-    <label class="field-label">Full name <span class="req">*</span></label>
-    <input type="text" name="name" value="{{ posted.name }}" required>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Name <span class="req">*</span></label>
+        <input type="text" name="first_name" placeholder="First" value="{{ posted.first_name|default:'' }}">
+      </div>
+      <div class="field">
+        <label class="field-label">&nbsp;</label>
+        <input type="text" name="last_name" placeholder="Last" value="{{ posted.last_name|default:'' }}">
+      </div>
+    </div>
 
-    <label class="field-label">Phone <span class="req">*</span></label>
-    <input type="tel" name="phone" value="{{ posted.phone }}" placeholder="(555) 555-5555" required>
+    <div class="field">
+      <label class="field-label">Email <span class="req">*</span></label>
+      <input type="email" name="email" value="{{ posted.email|default:'' }}">
+    </div>
 
-    <label class="field-label">Email</label>
-    <input type="email" name="email" value="{{ posted.email }}">
+    <div class="field">
+      <label class="field-label">Phone <span class="req">*</span></label>
+      <input type="tel" name="phone" value="{{ posted.phone|default:'' }}">
+    </div>
 
-    <label class="field-label">City</label>
-    <input type="text" name="city" value="{{ posted.city }}">
+    <div class="field">
+      <label class="field-label">Address <span class="req">*</span></label>
+      <input type="text" name="address" value="{{ posted.address|default:'' }}">
+    </div>
 
-    <label class="field-label">State</label>
-    <input type="text" name="state" maxlength="2" value="{{ posted.state }}" placeholder="GA">
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">City <span class="req">*</span></label>
+        <input type="text" name="city" value="{{ posted.city|default:'' }}">
+      </div>
+      <div class="field">
+        <label class="field-label">State <span class="req">*</span></label>
+        <input type="text" name="state" value="{{ posted.state|default:'' }}">
+      </div>
+    </div>
 
-    <label class="field-label">Current job status</label>
-    <input type="text" name="job_status" value="{{ posted.job_status }}" placeholder="e.g. Employed, Job seeking, Student">
-
-    <label class="checkbox-row">
-      <input type="checkbox" name="communications_opt_in" value="1" {% if posted.communications_opt_in %}checked{% endif %}>
-      <span>It's okay to text or email me about future job opportunities and events.</span>
-    </label>
-
-    {% if sections %}
-      {% for section in sections %}
-        <div class="section-title">{{ section.title|default:template.name }}</div>
-        {% for fq in section.form_questions.all %}
-          {% with q=fq.question %}
-          <label class="field-label">{{ q.label }}{% if q.is_required %} <span class="req">*</span>{% endif %}</label>
-
-          {% if q.type == 'short_text' %}
-            <input type="text" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
-
-          {% elif q.type == 'long_text' %}
-            <textarea name="q_{{ fq.id }}" rows="3" {% if q.is_required %}required{% endif %}></textarea>
-
-          {% elif q.type == 'numeric' %}
-            <input type="text" inputmode="numeric" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
-
-          {% elif q.type == 'date' %}
-            <input type="date" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
-
-          {% elif q.type == 'yes_no' %}
-            <label class="choice"><input type="radio" name="q_{{ fq.id }}" value="yes" {% if q.is_required %}required{% endif %}> Yes</label>
-            <label class="choice"><input type="radio" name="q_{{ fq.id }}" value="no"> No</label>
-
-          {% elif q.type == 'single_choice' or q.type == 'license_list' %}
-            {% for opt in q.options %}
-              <label class="choice"><input type="radio" name="q_{{ fq.id }}" value="{{ opt }}" {% if q.is_required %}required{% endif %}> {{ opt }}</label>
-            {% endfor %}
-
-          {% elif q.type == 'multi_choice' %}
-            {% for opt in q.options %}
-              <label class="choice"><input type="checkbox" name="q_{{ fq.id }}" value="{{ opt }}"> {{ opt }}</label>
-            {% endfor %}
-
-          {% else %}
-            <input type="text" name="q_{{ fq.id }}">
-          {% endif %}
-          {% endwith %}
+    <div class="field">
+      <label class="field-label">Current Job Status <span class="req">*</span></label>
+      <div class="choice-grid">
+        {% for choice in job_status_choices %}
+        <label class="choice-row">
+          <input type="radio" name="job_status" value="{{ choice }}" {% if posted.job_status == choice %}checked{% endif %}>
+          <span>{{ choice }}</span>
+        </label>
         {% endfor %}
-      {% endfor %}
-    {% endif %}
+      </div>
+    </div>
 
-    <button class="btn" type="submit">Sign in</button>
+    <div class="field">
+      <label class="field-label">What industry do you work in/ would like to work in? <span class="req">*</span></label>
+      <div class="choice-grid">
+        {% for choice in industry_choices %}
+        <label class="choice-row">
+          <input type="radio" name="industry_interest" value="{{ choice }}" {% if posted.industry_interest == choice %}checked{% endif %}>
+          <span>{{ choice }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Work History <span class="req">*</span></label>
+      <p class="field-help">If currently employed, please provide a detailed summary of your work history, including your current employer, job title, primary responsibilities, years of experience, and any previous positions that have helped prepare you for your desired career path. If not employed, please write N/A</p>
+      <textarea name="work_history">{{ posted.work_history|default:'' }}</textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Skills &amp; Experience (Check All That Apply) <span class="req">*</span></label>
+      <div class="choice-grid">
+        {% for choice in skills_choices %}
+        <label class="choice-row">
+          <input type="checkbox" name="skills" value="{{ choice }}" {% if choice in posted.skills %}checked{% endif %}>
+          <span>{{ choice }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Licenses &amp; Certifications (select all that apply)</label>
+      <div class="choice-grid">
+        {% for choice in license_choices %}
+        <label class="choice-row">
+          <input type="checkbox" name="licenses_certifications" value="{{ choice }}" {% if choice in posted.licenses_certifications %}checked{% endif %}>
+          <span>{{ choice }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="section-title">Job &amp; Work</div>
+
+    <div class="field">
+      <label class="field-label">Education <span class="req">*</span></label>
+      <p class="field-help">Please select your highest level of education completed. If you are currently a student, please include the name of your school, college, university, or training program.</p>
+      <input type="text" name="education" value="{{ posted.education|default:'' }}">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Are you willing to travel for work?</label>
+      <div class="choice-grid single-col">
+        {% for choice in travel_choices %}
+        <label class="choice-row">
+          <input type="radio" name="willing_to_travel" value="{{ choice }}" {% if posted.willing_to_travel == choice %}checked{% endif %}>
+          <span>{{ choice }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Where did you hear about us?</label>
+      <div class="choice-grid">
+        {% for choice in referral_choices %}
+        <label class="choice-row">
+          <input type="radio" name="referral_source" value="{{ choice }}" {% if posted.referral_source == choice %}checked{% endif %}>
+          <span>{{ choice }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Yes! I would like to receive updates, opportunities, and communications from Built To Work. <span class="req">*</span></label>
+      <div class="choice-grid single-col">
+        <label class="choice-row">
+          <input type="radio" name="communications_opt_in" value="Yes" {% if posted.communications_opt_in == 'Yes' %}checked{% endif %}>
+          <span>Yes, I opt In</span>
+        </label>
+        <label class="choice-row">
+          <input type="radio" name="communications_opt_in" value="No" {% if posted.communications_opt_in == 'No' %}checked{% endif %}>
+          <span>No</span>
+        </label>
+      </div>
+      <p class="disclaimer">By checking this box, I agree to receive updates, job opportunities, event information, and other communications from Built To Work via email, text message, and phone. Message and data rates may apply. I understand that I can opt out at any time.</p>
+    </div>
+
+    {% for section in sections %}
+      <div class="section-title">{{ section.title }}</div>
+      {% for fq in section.form_questions.all %}
+        {% with q=fq.question %}
+        <div class="field">
+          <label class="field-label">{{ q.label }} {% if q.is_required %}<span class="req">*</span>{% endif %}</label>
+          {% if q.type == 'short_text' %}
+            <input type="text" name="q_{{ fq.id }}">
+          {% elif q.type == 'long_text' %}
+            <textarea name="q_{{ fq.id }}"></textarea>
+          {% elif q.type == 'numeric' %}
+            <input type="text" inputmode="numeric" name="q_{{ fq.id }}">
+          {% elif q.type == 'date' %}
+            <input type="date" name="q_{{ fq.id }}">
+          {% elif q.type == 'yes_no' %}
+            <div class="choice-grid single-col">
+              <label class="choice-row"><input type="radio" name="q_{{ fq.id }}" value="yes"><span>Yes</span></label>
+              <label class="choice-row"><input type="radio" name="q_{{ fq.id }}" value="no"><span>No</span></label>
+            </div>
+          {% elif q.type == 'single_choice' or q.type == 'license_list' %}
+            <div class="choice-grid">
+              {% for opt in q.options %}
+              <label class="choice-row"><input type="radio" name="q_{{ fq.id }}" value="{{ opt }}"><span>{{ opt }}</span></label>
+              {% endfor %}
+            </div>
+          {% elif q.type == 'multi_choice' %}
+            <div class="choice-grid">
+              {% for opt in q.options %}
+              <label class="choice-row"><input type="checkbox" name="q_{{ fq.id }}" value="{{ opt }}"><span>{{ opt }}</span></label>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        {% endwith %}
+      {% endfor %}
+    {% endfor %}
+
+    <button type="submit" class="btw-btn">Submit</button>
   </form>
-</div>
+</main>
 {% endblock %}
