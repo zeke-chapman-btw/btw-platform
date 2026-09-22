@@ -1,0 +1,80 @@
+{% extends "intake/base_intake.html" %}
+{% block title %}Sign in — {{ event.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>{{ event.name }}</h2>
+  <p class="muted">Fill this out to sign in — takes about a minute.</p>
+
+  {% if error %}<div class="error-box">{{ error }}</div>{% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <label class="field-label">Full name <span class="req">*</span></label>
+    <input type="text" name="name" value="{{ posted.name }}" required>
+
+    <label class="field-label">Phone <span class="req">*</span></label>
+    <input type="tel" name="phone" value="{{ posted.phone }}" placeholder="(555) 555-5555" required>
+
+    <label class="field-label">Email</label>
+    <input type="email" name="email" value="{{ posted.email }}">
+
+    <label class="field-label">City</label>
+    <input type="text" name="city" value="{{ posted.city }}">
+
+    <label class="field-label">State</label>
+    <input type="text" name="state" maxlength="2" value="{{ posted.state }}" placeholder="GA">
+
+    <label class="field-label">Current job status</label>
+    <input type="text" name="job_status" value="{{ posted.job_status }}" placeholder="e.g. Employed, Job seeking, Student">
+
+    <label class="checkbox-row">
+      <input type="checkbox" name="communications_opt_in" value="1" {% if posted.communications_opt_in %}checked{% endif %}>
+      <span>It's okay to text or email me about future job opportunities and events.</span>
+    </label>
+
+    {% if sections %}
+      {% for section in sections %}
+        <div class="section-title">{{ section.title|default:template.name }}</div>
+        {% for fq in section.form_questions.all %}
+          {% with q=fq.question %}
+          <label class="field-label">{{ q.label }}{% if q.is_required %} <span class="req">*</span>{% endif %}</label>
+
+          {% if q.type == 'short_text' %}
+            <input type="text" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+
+          {% elif q.type == 'long_text' %}
+            <textarea name="q_{{ fq.id }}" rows="3" {% if q.is_required %}required{% endif %}></textarea>
+
+          {% elif q.type == 'numeric' %}
+            <input type="text" inputmode="numeric" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+
+          {% elif q.type == 'date' %}
+            <input type="date" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+
+          {% elif q.type == 'yes_no' %}
+            <label class="choice"><input type="radio" name="q_{{ fq.id }}" value="yes" {% if q.is_required %}required{% endif %}> Yes</label>
+            <label class="choice"><input type="radio" name="q_{{ fq.id }}" value="no"> No</label>
+
+          {% elif q.type == 'single_choice' or q.type == 'license_list' %}
+            {% for opt in q.options %}
+              <label class="choice"><input type="radio" name="q_{{ fq.id }}" value="{{ opt }}" {% if q.is_required %}required{% endif %}> {{ opt }}</label>
+            {% endfor %}
+
+          {% elif q.type == 'multi_choice' %}
+            {% for opt in q.options %}
+              <label class="choice"><input type="checkbox" name="q_{{ fq.id }}" value="{{ opt }}"> {{ opt }}</label>
+            {% endfor %}
+
+          {% else %}
+            <input type="text" name="q_{{ fq.id }}">
+          {% endif %}
+          {% endwith %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+
+    <button class="btn" type="submit">Sign in</button>
+  </form>
+</div>
+{% endblock %}

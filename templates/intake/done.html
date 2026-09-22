@@ -1,0 +1,9 @@
+{% extends "intake/base_intake.html" %}
+{% block title %}You're signed in{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center;">
+  <h2 style="color:#c1121f;">You're signed in ✓</h2>
+  <p>Thanks{% if name %}, {{ name }}{% endif %} — you're checked in for <strong>{{ event_name }}</strong>.</p>
+  <p class="muted">Staff will call you when it's your turn. You can close this page.</p>
+</div>
+{% endblock %}
