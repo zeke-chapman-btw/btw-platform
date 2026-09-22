@@ -1,0 +1,46 @@
+:root {
+  --primary: #000000;
+  --primary-fg: #ffffff;
+  --body-fg: #1a1a1a;
+  --body-bg: #ffffff;
+  --body-quiet-color: #444444;
+  --body-loud-color: #000000;
+  --header-color: #ffffff;
+  --header-branding-color: #ffffff;
+  --header-bg: #000000;
+  --header-link-color: #ffffff;
+  --breadcrumbs-fg: #ffffff;
+  --breadcrumbs-link-fg: #ffffff;
+  --breadcrumbs-bg: #c1121f;
+  --link-fg: #c1121f;
+  --link-hover-color: #8f0d17;
+  --link-selected-fg: #c1121f;
+  --hairline-color: #e0e0e0;
+  --border-color: #cccccc;
+  --error-fg: #c1121f;
+  --button-fg: #ffffff;
+  --button-bg: #c1121f;
+  --button-hover-bg: #8f0d17;
+  --default-button-bg: #000000;
+  --default-button-hover-bg: #333333;
+  --close-button-bg: #333333;
+  --close-button-hover-bg: #000000;
+  --delete-button-bg: #c1121f;
+  --delete-button-hover-bg: #8f0d17;
+  --object-tools-bg: #000000;
+  --object-tools-hover-bg: #c1121f;
+  --selected-bg: #f7e7e8;
+  --selected-row: #fbeaea;
+}
+div#header {
+  background: #000000;
+  border-bottom: 3px solid #c1121f;
+}
+.module h2, .module caption, .inline-group h2 {
+  background: #000000;
+  color: #ffffff;
+}
+div.breadcrumbs {
+  background: #c1121f;
+  color: #ffffff;
+}
