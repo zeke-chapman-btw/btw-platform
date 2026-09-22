@@ -1,0 +1,9 @@
+{% extends "kiosk/base_kiosk.html" %}
+{% block title %}Kiosk unavailable{% endblock %}
+{% block content %}
+<div class="kiosk-card" style="text-align:center;">
+  <h2 style="margin-top:0;">One moment</h2>
+  <p>{{ message }}</p>
+  <a class="btn" href="{% url 'kiosk_scan' %}">Back</a>
+</div>
+{% endblock %}

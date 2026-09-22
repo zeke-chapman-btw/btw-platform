@@ -1,0 +1,68 @@
+{% extends "kiosk/base_kiosk.html" %}
+{% block title %}{{ template.name }} | Kiosk{% endblock %}
+{% block content %}
+<div class="kiosk-card">
+  <h2 style="margin-top:0;">{{ template.name }}</h2>
+  <p class="muted" style="text-align:left;">Hi {{ participant.name }} — answer the questions below, then submit.</p>
+
+  <form method="post" action="{% url 'kiosk_submit' attendance.id %}">
+    {% csrf_token %}
+    {% for section in sections %}
+      {% if section.title %}<h3>{{ section.title }}</h3>{% endif %}
+      {% for fq in section.form_questions.all %}
+        {% with q=fq.question %}
+        <div style="margin-bottom:22px;text-align:left;">
+          <label style="display:block;font-weight:700;margin-bottom:8px;">
+            {{ q.label }}{% if q.is_required %} *{% endif %}
+          </label>
+
+          {% if q.type == 'short_text' %}
+            <input type="text" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+
+          {% elif q.type == 'long_text' %}
+            <textarea name="q_{{ fq.id }}" rows="4" style="width:100%;font-size:18px;padding:14px;border-radius:12px;border:2px solid #ccc;" {% if q.is_required %}required{% endif %}></textarea>
+
+          {% elif q.type == 'numeric' %}
+            <input type="number" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+
+          {% elif q.type == 'date' %}
+            <input type="date" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+
+          {% elif q.type == 'yes_no' %}
+            <div style="display:flex;gap:12px;">
+              <label style="flex:1;background:#f2f2f2;border-radius:12px;padding:14px;text-align:center;">
+                <input type="radio" name="q_{{ fq.id }}" value="yes" {% if q.is_required %}required{% endif %}> Yes
+              </label>
+              <label style="flex:1;background:#f2f2f2;border-radius:12px;padding:14px;text-align:center;">
+                <input type="radio" name="q_{{ fq.id }}" value="no"> No
+              </label>
+            </div>
+
+          {% elif q.type == 'single_choice' or q.type == 'license_list' %}
+            {% for opt in q.options %}
+              <label style="display:block;background:#f2f2f2;border-radius:12px;padding:14px;margin-bottom:8px;">
+                <input type="radio" name="q_{{ fq.id }}" value="{{ opt }}" {% if q.is_required %}required{% endif %}> {{ opt }}
+              </label>
+            {% endfor %}
+
+          {% elif q.type == 'multi_choice' %}
+            {% for opt in q.options %}
+              <label style="display:block;background:#f2f2f2;border-radius:12px;padding:14px;margin-bottom:8px;">
+                <input type="checkbox" name="q_{{ fq.id }}" value="{{ opt }}"> {{ opt }}
+              </label>
+            {% endfor %}
+
+          {% else %}
+            <input type="text" name="q_{{ fq.id }}">
+          {% endif %}
+        </div>
+        {% endwith %}
+      {% endfor %}
+    {% empty %}
+      <p class="muted">This test doesn't have any questions yet.</p>
+    {% endfor %}
+
+    <button class="btn" type="submit">Submit</button>
+  </form>
+</div>
+{% endblock %}

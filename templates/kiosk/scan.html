@@ -1,0 +1,75 @@
+{% extends "kiosk/base_kiosk.html" %}
+{% block title %}Scan your ticket | Kiosk{% endblock %}
+{% block content %}
+<div class="kiosk-card">
+  <h2 style="text-align:center;margin-top:0;">Scan your QR ticket</h2>
+  <p class="muted">Hold your ticket up to the camera below.</p>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <div id="cam-wrap" style="position:relative;border-radius:16px;overflow:hidden;background:#000;margin-bottom:20px;">
+    <video id="cam-video" style="width:100%;display:block;" playsinline muted></video>
+    <div id="cam-msg" class="muted" style="position:absolute;bottom:8px;left:0;right:0;color:#fff;"></div>
+  </div>
+
+  <form method="post" id="scan-form">
+    {% csrf_token %}
+    <input type="text" name="ticket" id="ticket-input" placeholder="Or type/paste ticket code" autofocus>
+    <button class="btn" type="submit">Continue</button>
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script>
+(function(){
+  var video = document.getElementById('cam-video');
+  var msg = document.getElementById('cam-msg');
+  var input = document.getElementById('ticket-input');
+  var form = document.getElementById('scan-form');
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var scanning = true;
+
+  function submitTicket(value){
+    if(!scanning) return;
+    scanning = false;
+    input.value = value;
+    form.submit();
+  }
+
+  function tick(){
+    if(!scanning) return;
+    if(video.readyState === video.HAVE_ENOUGH_DATA){
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var code = window.jsQR && jsQR(imageData.data, imageData.width, imageData.height);
+      if(code && code.data){
+        submitTicket(code.data);
+        return;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(function(stream){
+        video.srcObject = stream;
+        video.setAttribute('playsinline', true);
+        video.play();
+        requestAnimationFrame(tick);
+      })
+      .catch(function(){
+        msg.textContent = 'Camera unavailable — type your ticket code below.';
+        document.getElementById('cam-wrap').style.display = 'none';
+      });
+  } else {
+    document.getElementById('cam-wrap').style.display = 'none';
+  }
+})();
+</script>
+{% endblock %}
