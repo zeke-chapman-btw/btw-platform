@@ -1,75 +1,74 @@
 {% extends "kiosk/base_kiosk.html" %}
 {% block title %}Scan your ticket | Kiosk{% endblock %}
+{% block extrastyle %}
+<style>
+  .scan-ring{
+    width:160px;height:160px;border-radius:50%;
+    border:6px solid #f2f2f2;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 26px;
+    position:relative;
+  }
+  .scan-ring svg{width:76px;height:76px;color:#c1121f;}
+  .scan-ring::after{
+    content:'';position:absolute;inset:-6px;border-radius:50%;
+    border:3px solid #c1121f;opacity:0;
+    animation:pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{transform:scale(0.9);opacity:.7;}
+    80%{transform:scale(1.25);opacity:0;}
+    100%{opacity:0;}
+  }
+  #ticket-input{
+    caret-color:transparent;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .hint{color:#999;font-size:14px;margin-top:-6px;}
+</style>
+{% endblock %}
 {% block content %}
-<div class="kiosk-card">
-  <h2 style="text-align:center;margin-top:0;">Scan your QR ticket</h2>
-  <p class="muted">Hold your ticket up to the camera below.</p>
+<div class="kiosk-card" style="text-align:center;" id="scan-card">
+  <div class="scan-ring">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+      <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+      <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+      <path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"></path>
+    </svg>
+  </div>
+  <h2 style="margin:0 0 8px;">Scan your QR ticket</h2>
+  <p class="muted">Hold your ticket up to the scanner.</p>
 
   {% if error %}
   <div class="error-box">{{ error }}</div>
   {% endif %}
 
-  <div id="cam-wrap" style="position:relative;border-radius:16px;overflow:hidden;background:#000;margin-bottom:20px;">
-    <video id="cam-video" style="width:100%;display:block;" playsinline muted></video>
-    <div id="cam-msg" class="muted" style="position:absolute;bottom:8px;left:0;right:0;color:#fff;"></div>
-  </div>
-
   <form method="post" id="scan-form">
     {% csrf_token %}
-    <input type="text" name="ticket" id="ticket-input" placeholder="Or type/paste ticket code" autofocus>
-    <button class="btn" type="submit">Continue</button>
+    <input type="text" name="ticket" id="ticket-input" autocomplete="off" inputmode="none">
   </form>
+  <p class="hint">Staff: you can also type the ticket code and press Enter.</p>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
 <script>
 (function(){
-  var video = document.getElementById('cam-video');
-  var msg = document.getElementById('cam-msg');
   var input = document.getElementById('ticket-input');
   var form = document.getElementById('scan-form');
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext('2d');
-  var scanning = true;
+  var card = document.getElementById('scan-card');
 
-  function submitTicket(value){
-    if(!scanning) return;
-    scanning = false;
-    input.value = value;
-    form.submit();
-  }
+  function refocus(){ input.focus(); }
+  refocus();
+  setInterval(refocus, 1500);
+  card.addEventListener('click', refocus);
 
-  function tick(){
-    if(!scanning) return;
-    if(video.readyState === video.HAVE_ENOUGH_DATA){
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var code = window.jsQR && jsQR(imageData.data, imageData.width, imageData.height);
-      if(code && code.data){
-        submitTicket(code.data);
-        return;
-      }
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      if(input.value.trim().length > 0){ form.submit(); }
     }
-    requestAnimationFrame(tick);
-  }
-
-  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(function(stream){
-        video.srcObject = stream;
-        video.setAttribute('playsinline', true);
-        video.play();
-        requestAnimationFrame(tick);
-      })
-      .catch(function(){
-        msg.textContent = 'Camera unavailable — type your ticket code below.';
-        document.getElementById('cam-wrap').style.display = 'none';
-      });
-  } else {
-    document.getElementById('cam-wrap').style.display = 'none';
-  }
+  });
 })();
 </script>
 {% endblock %}
