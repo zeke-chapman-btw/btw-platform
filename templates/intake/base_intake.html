@@ -47,8 +47,8 @@
     width: 100%;
     border: 1px solid #bbbbbb;
     border-radius: 3px;
-    padding: 10px 12px;
-    font-size: 15px;
+    padding: 12px 12px;
+    font-size: 16px;
     font-family: inherit;
     background: #ffffff;
     color: #111111;
@@ -56,8 +56,18 @@
   textarea { min-height: 90px; resize: vertical; }
   .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; }
   .choice-grid.single-col { grid-template-columns: 1fr; }
-  .choice-row { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; padding: 4px 0; }
-  .choice-row input { margin-top: 3px; }
+  .choice-row { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; padding: 8px 0; min-height: 24px; }
+  .choice-row input { margin-top: 3px; width: 20px; height: 20px; flex-shrink: 0; }
+
+  @media (max-width: 520px) {
+    main { padding: 16px 14px 50px; }
+    .field-row { flex-direction: column; gap: 0; }
+    .choice-grid { grid-template-columns: 1fr; }
+    header.btw-header .logo { font-size: 17px; }
+    .btw-banner .big { font-size: 17px; }
+    .btw-banner .small { font-size: 12px; }
+    .btw-btn { padding: 16px 20px; font-size: 17px; }
+  }
   .section-title {
     font-weight: 800;
     font-size: 16px;

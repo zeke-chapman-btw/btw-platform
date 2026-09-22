@@ -1,6 +1,9 @@
+import base64
 import datetime
 import re
+from io import BytesIO
 
+import qrcode
 from django.shortcuts import render, redirect
 
 from apps.events.models import Event
@@ -220,13 +223,24 @@ def intake_form(request):
                     answers[str(fq.id)] = {'label': q.label, 'value': value}
             FormResponse.objects.create(form_version=version, answers=answers)
 
-        return redirect(f"/intake/done/?name={name}&event={event.name}")
+        return redirect(
+            f"/intake/done/?name={name}&event={event.name}&participant={participant.public_id}"
+        )
 
     return render(request, 'intake/form.html', context)
 
 
 def intake_done(request):
+    ticket_code = request.GET.get('participant', '')
+    qr_data_uri = None
+    if ticket_code:
+        img = qrcode.make(ticket_code)
+        buf = BytesIO()
+        img.save(buf, format='PNG')
+        qr_data_uri = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode('ascii')
     return render(request, 'intake/done.html', {
         'name': request.GET.get('name', ''),
         'event_name': request.GET.get('event', ''),
+        'ticket_code': ticket_code,
+        'qr_data_uri': qr_data_uri,
     })
