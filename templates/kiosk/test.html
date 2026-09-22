@@ -1,60 +1,76 @@
 {% extends "kiosk/base_kiosk.html" %}
 {% block title %}{{ template.name }} | Kiosk{% endblock %}
+{% block extrastyle %}
+<style>
+  .progress-wrap{width:100%;max-width:640px;margin:0 auto 18px;}
+  .progress-track{background:#2a2a2a;border-radius:999px;height:10px;overflow:hidden;}
+  .progress-fill{background:#c1121f;height:100%;width:0%;transition:width .25s ease;}
+  .progress-label{color:#aaa;text-align:center;font-size:14px;margin-top:8px;letter-spacing:.5px;text-transform:uppercase;}
+  .q-step{display:none;text-align:left;}
+  .q-step.active{display:block;}
+  .q-section-tag{display:inline-block;background:#f2f2f2;color:#555;border-radius:999px;padding:4px 14px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
+  .q-label{font-size:24px;font-weight:800;margin:0 0 20px;line-height:1.3;}
+  .q-choice{display:flex;align-items:center;gap:14px;background:#f2f2f2;border:3px solid transparent;border-radius:14px;padding:18px;margin-bottom:12px;font-size:19px;cursor:pointer;transition:border-color .15s,background .15s;}
+  .q-choice input{width:22px;height:22px;flex:none;}
+  .q-choice.checked{border-color:#c1121f;background:#fdeaea;font-weight:700;}
+  .yesno-row{display:flex;gap:14px;}
+  .yesno-row .q-choice{flex:1;justify-content:center;}
+  .nav-row{display:flex;gap:14px;margin-top:28px;}
+  .nav-row .btn.secondary{flex:0 0 140px;}
+  .nav-row .btn.primary-next{flex:1;}
+  .field-error{color:#c1121f;font-weight:700;font-size:14px;margin-top:-12px;margin-bottom:16px;display:none;}
+  textarea.kiosk-input{width:100%;font-size:19px;padding:16px;border-radius:12px;border:2px solid #ccc;font-family:inherit;}
+  input.kiosk-input{width:100%;font-size:19px;padding:16px;border-radius:12px;border:2px solid #ccc;}
+</style>
+{% endblock %}
 {% block content %}
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label"></div>
+</div>
 <div class="kiosk-card">
-  <h2 style="margin-top:0;">{{ template.name }}</h2>
-  <p class="muted" style="text-align:left;">Hi {{ participant.name }} — answer the questions below, then submit.</p>
-
-  <form method="post" action="{% url 'kiosk_submit' attendance.id %}">
+  <form method="post" action="{% url 'kiosk_submit' attendance.id %}" id="kiosk-form">
     {% csrf_token %}
     {% for section in sections %}
-      {% if section.title %}<h3>{{ section.title }}</h3>{% endif %}
       {% for fq in section.form_questions.all %}
         {% with q=fq.question %}
-        <div style="margin-bottom:22px;text-align:left;">
-          <label style="display:block;font-weight:700;margin-bottom:8px;">
-            {{ q.label }}{% if q.is_required %} *{% endif %}
-          </label>
+        <div class="q-step" data-required="{% if q.is_required %}1{% else %}0{% endif %}" data-type="{{ q.type }}">
+          {% if section.title %}<span class="q-section-tag">{{ section.title }}</span>{% endif %}
+          <p class="q-label">{{ q.label }}</p>
 
           {% if q.type == 'short_text' %}
-            <input type="text" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+            <input class="kiosk-input" type="text" name="q_{{ fq.id }}">
 
           {% elif q.type == 'long_text' %}
-            <textarea name="q_{{ fq.id }}" rows="4" style="width:100%;font-size:18px;padding:14px;border-radius:12px;border:2px solid #ccc;" {% if q.is_required %}required{% endif %}></textarea>
+            <textarea class="kiosk-input" name="q_{{ fq.id }}" rows="4"></textarea>
 
           {% elif q.type == 'numeric' %}
-            <input type="number" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+            <input class="kiosk-input" type="number" name="q_{{ fq.id }}">
 
           {% elif q.type == 'date' %}
-            <input type="date" name="q_{{ fq.id }}" {% if q.is_required %}required{% endif %}>
+            <input class="kiosk-input" type="date" name="q_{{ fq.id }}">
 
           {% elif q.type == 'yes_no' %}
-            <div style="display:flex;gap:12px;">
-              <label style="flex:1;background:#f2f2f2;border-radius:12px;padding:14px;text-align:center;">
-                <input type="radio" name="q_{{ fq.id }}" value="yes" {% if q.is_required %}required{% endif %}> Yes
-              </label>
-              <label style="flex:1;background:#f2f2f2;border-radius:12px;padding:14px;text-align:center;">
-                <input type="radio" name="q_{{ fq.id }}" value="no"> No
-              </label>
+            <div class="yesno-row">
+              <label class="q-choice"><input type="radio" name="q_{{ fq.id }}" value="yes"> Yes</label>
+              <label class="q-choice"><input type="radio" name="q_{{ fq.id }}" value="no"> No</label>
             </div>
 
           {% elif q.type == 'single_choice' or q.type == 'license_list' %}
             {% for opt in q.options %}
-              <label style="display:block;background:#f2f2f2;border-radius:12px;padding:14px;margin-bottom:8px;">
-                <input type="radio" name="q_{{ fq.id }}" value="{{ opt }}" {% if q.is_required %}required{% endif %}> {{ opt }}
-              </label>
+              <label class="q-choice"><input type="radio" name="q_{{ fq.id }}" value="{{ opt }}"> {{ opt }}</label>
             {% endfor %}
 
           {% elif q.type == 'multi_choice' %}
             {% for opt in q.options %}
-              <label style="display:block;background:#f2f2f2;border-radius:12px;padding:14px;margin-bottom:8px;">
-                <input type="checkbox" name="q_{{ fq.id }}" value="{{ opt }}"> {{ opt }}
-              </label>
+              <label class="q-choice"><input type="checkbox" name="q_{{ fq.id }}" value="{{ opt }}"> {{ opt }}</label>
             {% endfor %}
 
           {% else %}
-            <input type="text" name="q_{{ fq.id }}">
+            <input class="kiosk-input" type="text" name="q_{{ fq.id }}">
           {% endif %}
+
+          <div class="field-error">Please answer before continuing.</div>
         </div>
         {% endwith %}
       {% endfor %}
@@ -62,7 +78,80 @@
       <p class="muted">This test doesn't have any questions yet.</p>
     {% endfor %}
 
-    <button class="btn" type="submit">Submit</button>
+    <div class="nav-row">
+      <button type="button" class="btn secondary" id="back-btn">Back</button>
+      <button type="button" class="btn primary-next" id="next-btn">Next</button>
+    </div>
   </form>
 </div>
+
+<script>
+(function(){
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.q-step'));
+  var idx = 0;
+  var backBtn = document.getElementById('back-btn');
+  var nextBtn = document.getElementById('next-btn');
+  var fill = document.getElementById('progress-fill');
+  var label = document.getElementById('progress-label');
+  var form = document.getElementById('kiosk-form');
+
+  if(steps.length === 0){
+    document.querySelector('.nav-row').style.display = 'none';
+    return;
+  }
+
+  function show(i){
+    steps.forEach(function(s, si){ s.classList.toggle('active', si === i); });
+    backBtn.style.visibility = (i === 0) ? 'hidden' : 'visible';
+    nextBtn.textContent = (i === steps.length - 1) ? 'Submit' : 'Next';
+    fill.style.width = Math.round(((i) / steps.length) * 100) + '%';
+    label.textContent = 'Question ' + (i + 1) + ' of ' + steps.length;
+  }
+
+  function isAnswered(step){
+    var type = step.dataset.type;
+    if(type === 'multi_choice'){
+      return step.querySelectorAll('input[type=checkbox]:checked').length > 0;
+    }
+    if(type === 'yes_no' || type === 'single_choice' || type === 'license_list'){
+      return step.querySelectorAll('input[type=radio]:checked').length > 0;
+    }
+    var field = step.querySelector('input, textarea');
+    return field && field.value.trim().length > 0;
+  }
+
+  steps.forEach(function(step){
+    step.addEventListener('change', function(e){
+      if(e.target.type === 'radio' || e.target.type === 'checkbox'){
+        step.querySelectorAll('.q-choice').forEach(function(label){
+          var input = label.querySelector('input');
+          label.classList.toggle('checked', input.checked);
+        });
+      }
+      step.querySelector('.field-error').style.display = 'none';
+    });
+  });
+
+  backBtn.addEventListener('click', function(){
+    if(idx > 0){ idx -= 1; show(idx); }
+  });
+
+  nextBtn.addEventListener('click', function(){
+    var step = steps[idx];
+    var required = step.dataset.required === '1';
+    if(required && !isAnswered(step)){
+      step.querySelector('.field-error').style.display = 'block';
+      return;
+    }
+    if(idx === steps.length - 1){
+      form.submit();
+      return;
+    }
+    idx += 1;
+    show(idx);
+  });
+
+  show(0);
+})();
+</script>
 {% endblock %}
